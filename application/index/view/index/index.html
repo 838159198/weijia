@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>用户管理</title>
+</head>
+<style>
+	table {  
+  	 min-width:500px;
+     border-collapse: collapse;  
+  
+     font-family: Futura, Arial, sans-serif;  
+  	 margin: 0 auto;
+}  
+  
+caption {  
+  
+     font-size: larger;  
+  
+     margin: 1em auto;  
+  
+}  
+  
+th,td {  
+  
+     padding: .65em;  
+  
+}  
+  
+th {  
+  
+     background: #555;  
+  
+   border: 1px solid #777;  
+  
+   color: #fff;  
+  
+}  
+  
+td {  
+  
+     border: 1px solid#777;  
+  
+}  
+</style>
+<body>
+	<h1 style=" text-align: center;">welcome:<font style=" color: red;">{$_SESSION['think']['name']} <a href="login_out">退出登录</a></font></h1>
+	<table>  
+        <caption>用户管理</caption>  
+        <thead>  
+            <tr>  
+                <th>ID  
+                <th>用户名  
+                <th>登录时间
+                <th>操作
+        </thead>  
+
+        <tbody>  
+        	{volist name="data" id="vo"}
+            <tr>  
+                <td>{$vo.id} 
+                <td>{$vo.name}
+                <td>{$vo.logintime}
+                <td><a href="add">添加</a>|<a href="update?id={$vo.id}">修改</a>|<a href="delete?id={$vo.id}">删除</a>
+            {/volist}
+        </tbody>  
+    </table>  
+
+
+</body>
+</html>
