@@ -139,7 +139,13 @@ return [
     ],
 
     // 视图输出字符串内容替换
-    'view_replace_str'       => [],
+    'view_replace_str'       => [
+		'__CSS__' => 'static/css',
+        '__IMG__' => 'static/image',
+        '__JS__' => 'static/js',
+        '__UPS__' => 'static/uploads'
+	
+	],
     // 默认跳转页面对应的模板文件
     'dispatch_success_tmpl'  => THINK_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
     'dispatch_error_tmpl'    => THINK_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
@@ -236,4 +242,10 @@ return [
         'var_page'  => 'page',
         'list_rows' => 15,
     ],
+
+    'appid' => 'wx956daf8b541d9260',
+    'appsecret' => '060feac70298ac1353e4df0bf6f437e1',
+
+   'interfaceurl' => 'http://47.94.4.174/weijiafw/public/static/'
+
 ];

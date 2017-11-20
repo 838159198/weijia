@@ -1,0 +1,1 @@
+SELECT * FROM `user_wx` WHERE  `open_id` = 'oZ4XesuWwL1EAEycGYrgLTceU5dA'

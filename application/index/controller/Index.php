@@ -1,177 +1,290 @@
 <?php
-// I am not sure why this works but it fixes the problem. 
-// 虽然我不知道为什么这样管用，但它却是修复了问题
-// Move on and call me an idiot later.
-// 你我都知道这代码很烂
-// 佛祖保佑代码永无BUG
-// @yiwlny   代号：小海     名言：你的指尖有改变世界的力量
-
-/**                                                                          
- *          .,:,,,                                        .::,,,::.          
- *        .::::,,;;,                                  .,;;:,,....:i:         
- *        :i,.::::,;i:.      ....,,:::::::::,....   .;i:,.  ......;i.        
- *        :;..:::;::::i;,,:::;:,,,,,,,,,,..,.,,:::iri:. .,:irsr:,.;i.        
- *        ;;..,::::;;;;ri,,,.                    ..,,:;s1s1ssrr;,.;r,        
- *        :;. ,::;ii;:,     . ...................     .;iirri;;;,,;i,        
- *        ,i. .;ri:.   ... ............................  .,,:;:,,,;i:        
- *        :s,.;r:... ....................................... .::;::s;        
- *        ,1r::. .............,,,.,,:,,........................,;iir;        
- *        ,s;...........     ..::.,;:,,.          ...............,;1s        
- *       :i,..,.              .,:,,::,.          .......... .......;1,       
- *      ir,....:rrssr;:,       ,,.,::.     .r5S9989398G95hr;. ....,.:s,      
- *     ;r,..,s9855513XHAG3i   .,,,,,,,.  ,S931,.,,.;s;s&BHHA8s.,..,..:r:     
- *    :r;..rGGh,  :SAG;;G@BS:.,,,,,,,,,.r83:      hHH1sXMBHHHM3..,,,,.ir.    
- *   ,si,.1GS,   sBMAAX&MBMB5,,,,,,:,,.:&8       3@HXHBMBHBBH#X,.,,,,,,rr    
- *   ;1:,,SH:   .A@&&B#&8H#BS,,,,,,,,,.,5XS,     3@MHABM&59M#As..,,,,:,is,   
- *  .rr,,,;9&1   hBHHBB&8AMGr,,,,,,,,,,,:h&&9s;   r9&BMHBHMB9:  . .,,,,;ri.  
- *  :1:....:5&XSi;r8BMBHHA9r:,......,,,,:ii19GG88899XHHH&GSr.      ...,:rs.  
- *  ;s.     .:sS8G8GG889hi.        ....,,:;:,.:irssrriii:,.        ...,,i1,  
- *  ;1,         ..,....,,isssi;,        .,,.                      ....,.i1,  
- *  ;h:               i9HHBMBBHAX9:         .                     ...,,,rs,  
- *  ,1i..            :A#MBBBBMHB##s                             ....,,,;si.  
- *  .r1,..        ,..;3BMBBBHBB#Bh.     ..                    ....,,,,,i1;   
- *   :h;..       .,..;,1XBMMMMBXs,.,, .. :: ,.               ....,,,,,,ss.   
- *    ih: ..    .;;;, ;;:s58A3i,..    ,. ,.:,,.             ...,,,,,:,s1,    
- *    .s1,....   .,;sh,  ,iSAXs;.    ,.  ,,.i85            ...,,,,,,:i1;     
- *     .rh: ...     rXG9XBBM#M#MHAX3hss13&&HHXr         .....,,,,,,,ih;      
- *      .s5: .....    i598X&&A&AAAAAA&XG851r:       ........,,,,:,,sh;       
- *      . ihr, ...  .         ..                    ........,,,,,;11:.       
- *         ,s1i. ...  ..,,,..,,,.,,.,,.,..       ........,,.,,.;s5i.         
- *          .:s1r,......................       ..............;shs,           
- *          . .:shr:.  ....                 ..............,ishs.             
- *              .,issr;,... ...........................,is1s;.               
- *                 .,is1si;:,....................,:;ir1sr;,                  
- *                    ..:isssssrrii;::::::;;iirsssssr;:..                    
- *                         .,::iiirsssssssssrri;;:.                      
- */                         
-
-
 
 namespace app\index\controller;
 
-use think\Controller;
-use app\index\model\User;
-use think\Session;
-class Index extends \think\Controller
-{	
+use app\index\model\UserShop;
+use \think\Controller;
+use \think\Request;
+use think\Wechat;
+use think\WechatAuth;
+use app\index\model\WxToken;
+use app\index\model\UserWx;
+class Index extends Controller
+{
 
-	protected $beforeActionList = [
-       'gosession' =>  ['except'=>'login,login_all'],    //tp前置方法，不管执行那个方法，都要先执行gosession ， 除了login,login_all方法
-    ];
-
-    //定义前置控制器
-    public function gosession()
-    {   
-        $id=Session::get('id');
-    	if(!$id)
-    	{
-    		$this->error('请先登录','login');
-    	}
-    }
-
-
-    //用户管理首页， 登录成功后的页面
     public function index()
     {
-        $db = db('user');
-    	$data = $db->select();
-		return $this->fetch('index',['data'=>$data]);
-    }
+        try {
+            $appid = 'wx956daf8b541d9260'; //AppID(应用ID)
+            $token = 'weijia'; //微信后台填写的TOKEN
+            $crypt = 'xE2OT1TOMRAjIbPU9CWpvkHbEvrMFj81XW4n6EBAvf6'; //消息加密KEY（EncodingAESKey）
 
-    //退出登录
-    public function login_out()
-    {
-    	session::clear();
-        $this->success('退出成功','login');
-    }
+            /* 加载微信SDK */
+            $wechat = new Wechat($token, $appid, $crypt);
 
-    //登录页面
-    public function login()
-    {
+            /* 获取请求信息 */
+            $data = $wechat->request();
 
-    	return $this->fetch('login');
 
-    }
+            if ($data && is_array($data)){
+                //记录微信推送过来的数据
+                // //file_put_contents('data.json', json_encode($data));
 
-    //用户登录方法
-    public function login_all()
-    {
-    	$db = db('user');
-    	$name = input('post.name');
-     	$password = input('post.password');
-        // 查询数据
-		$list = $db->where(['name'=>$name,'password'=>$password])->find();
+                //根据不同的事件调用不通的接口
+                $this->responseMsg();
 
-        //如果存在就存入session，并且跳转首页
-		if($list)
-		{	
+            }
+        } catch (\Exception $e) {
+            file_put_contents('error.json', json_encode($e->getMessage()));
+        }
 
-			Session::set('name',$name);
-			Session::set('id',$list['id']);
 
-			$db->where(['name'=>$name,'password'=>$password])->update(['logintime'=>date("Y-m-d H:i:s")]);
-			$this->redirect('index');
-		}else
-		{
-			$this->error('登录失败','login');
-		}
     }
 
 
+     /*设置自定义菜单*/
+    public function setMenu(){
+        $jsonmenu = '{
+	        "button":[{
+				"type": "view",
+	            "name": "预约量房",
+	            "url": "https://mp.weixin.qq.com/s?__biz=MzAwMDkyNzU5MQ==&tempkey=OTIxX0VFRURuS2pJajdjaExvaDhpYlluQ0w2MWxrejgxWlh6b3dHOEUzb3JwM2NIVkcwMk5xY1VZS0REUE1Ib2ZLUjFZOXMyYURTYkwwOFRfWERlV1ZpYkI3akpKbmxaR1pwMEczd3k3V09oYUxSNWJhamlHUXppOHdNOWNKMGRGVEl6c2dXcGt4YlRRRlljc291UG1nWHdYTm1BeV83cXpWR3h5Tkx3NFF%2Bfg%3D%3D&#rd"
+	        },{
+	            "name": "产品推荐",
+				"sub_button":[{
+			            "type": "view",
+			            "name": "分期装修",
+			            "url": "http://www.weijiazhuang.top/weijiafw/public/index.php?s=index/protocol/isHaveFenqi"
+			        },{
+			            "type": "view",
+			            "name": "效果图分享",
+			            "url": "http://mp.weixin.qq.com/s/m9ih7So03jJOS8vmwEsdrw"
+			        }]
+	        },{
+				"type": "view",
+	            "name": "管理",
+	            "url": "http://www.weijiazhuang.top/weijiafw/public/index.php?s=index/manage/guanli"
+	        }]
+	    }';
 
-
-    //用户添加页面
-    public function add()
-    {
-    	return $this->fetch('add');
+        $url = 'https://api.weixin.qq.com/cgi-bin/menu/create?access_token=' . $this->getAccessToken();
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $jsonmenu);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($curl);
+        curl_close($curl);
+        echo $output;
     }
 
 
-    //用户添加方法
-    public function add_all()
-    {
-        $name = input('post.name');
-        $password = input('post.password');
-        $db = db('user');
-        //添加用户
-        $list = $db->insert(['name' => $name, 'password' => $password]);
-        //判断添加用户是否成功
-        if($list){
-            $this->success('添加成功!','index');
+    /*获取accessToken*/
+    private function getAccessToken(){
+
+        $token = WxToken::getAccessToken();//查看库里保存的token有没有过期
+        if($token['expires'] > time()){
+            return $token['access_token'];//没有过期，返回
         }else{
-            $this->error('添加错误!','index');
+            //token过期后的处理，向微信平台获取新token，然后保存入库
+
+            $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=".config('appid')."&secret=".config('appsecret');
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            $output = curl_exec($ch);
+            curl_close($ch);
+
+            $jsoninfo = json_decode($output, true);
+
+            $bool = WxToken::updateAccessToken($jsoninfo['access_token']);
+            if($bool){
+                return $jsoninfo['access_token'];
+            }
+
         }
     }
 
-    //用户修改页面
-    public function update($id)
-    {     
-        $db = db('user');
-        $data = $db->where(['id'=>$id])->find();
-    	return $this->fetch('update',['data'=>$data]);
+
+    /*回复信息*/
+    public function responseMsg(){
+        $postStr = file_get_contents("php://input");
+
+        if (!empty($postStr)){
+            $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+            switch ($postObj->MsgType){
+                case 'text':
+                    $this->msgText($postObj);
+                    //$this->msgNews($postObj);
+                    break;
+                case 'event':
+                    //file_put_contents('/usr/share/nginx/html/testshop/appserver/public/tt.txt','56565');
+                    $this->msgEvent($postObj);
+            }
+        }else {
+            echo "";
+            exit;
+        }
+
     }
 
-    //用户修改方法
-    public function update_all($id)
-    {
-        $db = db('user');
-        $name = input('name');
-        $password = input('password');
-        $upd = $db->where(['id'=>$id])->update(['name'=>$name,'password'=>$password]);
-        if($upd){
-            echo '修改成功';
-            $this->redirect('index');
-        }else{
-            echo '修改失败';
+
+
+     /* 关注公众号事件 */
+    private function msgEvent($data){
+        //关注公众号事件
+        if($data->Event == 'subscribe'){
+            $this->msgNews($data);
+            $info = $this->getWxUserInfo($data->FromUserName);//用户关注后获取关注者信息。
+           //$info = '{"subscribe":1,"openid":"om15-v9zLwEMsVxsg-Rk935ANwp8","nickname":"linxr25","sex":1,"language":"zh_CN","city":"Tongzhou","province":"Beijing","country":"China","headimgurl":"http:\/\/wx.qlogo.cn\/mmopen\/PiajxSqBRaEJf2o8EbRRum6W6Sc5cEfCRaAPDN5Qx8J1wN3PQlE5ricyic6eyxicblibV6Yic0xftpK9Iq17vibTO1urA\/0","subscribe_time":1484883144,"remark":"","groupid":0,"tagid_list":[]}';
+            //file_put_contents('cc.txt',$info);
+            //$info = json_decode($info,true);
+            $userwx = new UserWx();
+            $userwx->addNoticer($info);//将新关注的用户插入数据库
         }
     }
 
-    //删除用户方法
-    public function delete($id)
-    {
-        $db = db('user');
-        $del=$db->where(['id' => $id])->delete();
-        $this->redirect('index');
+
+    /*获取关注者的个人信息*/
+    private function getWxUserInfo($openId){
+        $url = 'https://api.weixin.qq.com/cgi-bin/user/info?access_token=' . $this->getAccessToken() . '&openid=' . $openId . '&lang=zh_CN';
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($ch);
+        curl_close($ch);
+        //$jsoninfo = json_decode($output, true);
+        return $output;
+    }
+
+
+    /*被动回复图文*/
+    private function msgNews($data){
+        $newsTpl = "<xml>
+					<ToUserName><![CDATA[%s]]></ToUserName>
+					<FromUserName><![CDATA[%s]]></FromUserName>
+					<CreateTime>%s</CreateTime>
+					<MsgType><![CDATA[%s]]></MsgType>
+					<ArticleCount>1</ArticleCount>
+					<Articles>
+					  <item>
+						<Title><![CDATA[%s]]></Title>
+						<Description><![CDATA[%s]]></Description>
+						<PicUrl><![CDATA[%s]]></PicUrl>
+						<Url><![CDATA[%s]]></Url>
+					  </item>
+					</Articles>
+					</xml>";
+
+        //file_put_contents('/usr/share/nginx/html/testshop/appserver/public/tt.txt',$postObj->Content);
+        $titleStr = '维家智能家居';
+        $descStr = '感谢您关注维家装饰,维家装饰以专业的服务为客户提供室内整体设计施工、为您打造环保、智能、温馨的家居环境!预约量房电话0318-3350777!';
+        $resultStr = sprintf($newsTpl, $data->FromUserName, $data->ToUserName, time(), 'news' ,$titleStr,$descStr, config('interfaceurl').'image/guanzhu.jpg', '');
+        echo $resultStr;
+
+    }
+
+
+
+    /*回复消息*/
+    private function msgText($data){
+
+        $textTpl = "<xml>
+					<ToUserName><![CDATA[%s]]></ToUserName>
+					<FromUserName><![CDATA[%s]]></FromUserName>
+					<CreateTime>%s</CreateTime>
+					<MsgType><![CDATA[%s]]></MsgType>
+					<Content><![CDATA[%s]]></Content>
+					</xml>";
+       /* $exp = '/^1[34578][0-9]{9}$/';
+        $typeArr = ["职位","老板","监理管理","设计管理","销售管理","材料员","财务","预算员","工长","监理","设计师助理","设计师","销售","工长管理"];
+        $shopArr = ["店铺","维家武强店","维家深州店","华庭深州店","维家衡水店"];
+        if(preg_match($exp,substr($data->Content,0,11))){
+
+            $usershop = new UserShop();
+            $dianyuan = $usershop->getUserShopId(substr($data->Content,0,11));
+            if(empty($dianyuan)){
+                $contentStr = "您还未被添加至公司员工";
+            }else{
+                $bool = UserWx::updateWxdianyuan ($data->FromUserName,$dianyuan->d_id);
+                //file_put_contents('sql.txt',$userwx->getLastSql()); ;public 目录下
+                if($bool){
+                    $contentStr = "您已绑定为".$shopArr[$dianyuan->shop]."的".$typeArr[$dianyuan->type]."职位";
+                }
+            }
+
+
+        }*/
+        $arr = explode(' ',$data->Content);
+        $usershop = new UserShop();
+        if($usershop->getUser($data->FromUserName)){
+
+                $bool = $usershop->insertShopUser($arr,$data->FromUserName);
+                if($bool){
+                    $contentStr = "您已绑定为".$arr[3]."的".$arr[2]."职位";
+                }else{
+                    $contentStr = "绑定失败,请检查格式重新绑定！";
+                }
+
+
+        }else{
+            $contentStr = "您已绑定店内员工,无须重新绑定";
+        }
+
+        $resultStr = sprintf($textTpl, $data->FromUserName, $data->ToUserName, time(), $data->MsgType ,$contentStr);
+        echo $resultStr;
+
+    }
+
+    /*发送客服消息*/
+    protected function sendKF($data){
+        $url = 'https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=' . $this->getAccessToken();
+        $j = '<xml>
+			     <ToUserName><![CDATA[%s]]></ToUserName>
+			     <FromUserName><![CDATA[%s]]></FromUserName>
+			     <CreateTime>%s</CreateTime>
+			     <MsgType><![CDATA[transfer_customer_service]]></MsgType>
+			 </xml>';
+        $resultStr = sprintf($j, $data->FromUserName, $data->ToUserName, time());
+        echo $resultStr;
+    }
+
+    /*获取关注者列表*/
+    private function getGuanzhuList(){
+        $url = 'https://api.weixin.qq.com/cgi-bin/user/get?access_token=' . $this->getAccessToken();
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($ch);
+        curl_close($ch);
+        //file_put_contents('nnn.txt',$output);
+        $jsoninfo = json_decode($output, true);
+        return $jsoninfo['data']['openid'];
+
+    }
+
+    /*将关注者都插入到数据库中*/
+    public function insertIntoTable(){
+        $userwx = new UserWx();
+        //将新关注的用户插入数据库
+        $arr2 = array();
+        $arr = $this->getGuanzhuList();
+        for ($i = 0;$i < count($arr);$i++){
+            $jsonData = $this->getWxUserInfo($arr[$i]);
+            $arr2[$i] = $jsonData;
+           // $userwx->addNoticer($jsonData);
+        }
+        //print_r($arr2);
+        $userwx->saveAllGuanzhu($arr2);
     }
 
 }

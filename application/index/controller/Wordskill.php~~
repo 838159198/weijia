@@ -1,0 +1,141 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: Administrator
+ * Date: 2017/11/7
+ * Time: 22:23
+ */
+namespace app\index\controller;
+use think\Controller;
+use app\index\model\Product;
+use app\index\model\ProDetail;
+use app\index\model\ProPicture;
+use \think\Db;
+class Wordskill extends Controller
+{
+
+    //话术模板首页
+    public function wordIndex(){
+
+        return $this->fetch();
+
+    }
+
+    //产品及话术
+    public function chanpinhs(){
+    	if(isset($_POST['leixing'])){
+    		$insert=new Product();
+    		$insert->name=$_POST['leixing'];
+    		$insert->addtime=date('Y-m-d H:i:s');
+    		$insert->save();
+    		if($insert->p_id){
+    			echo 1;exit;
+    		}else{
+    			echo 0;exit;
+    		}
+    	}
+
+    	$sql="select * from `product`";
+    	$data=Db::query($sql);
+    	$this->assign('list',$data);
+        return $this->fetch();
+    }
+    //产品详情
+    public function productdetail(){
+    	if(isset($_GET['d_id'])){
+    		$sql1="select * from `pro_detail` where d_id=".$_GET['d_id']." limit 1";
+    		$data1=Db::query($sql1);
+			$sql2 = 'select img_url from pro_picture where d_id ='.$_GET['d_id'];
+			$data2 = Db::query($sql2);
+			foreach($data2 as $key => $value){
+				$arr[] = $value['img_url'];
+			}	//print_r($arr);
+			$this->assign('list',$data1[0]);
+			$this->assign('imgArr',$arr);
+
+			return $this->fetch();
+
+    	}else{
+			return $this->fetch();
+		}
+
+
+
+
+
+
+    }
+    //产品子类
+    public function childpro(){
+    	$id=isset($_GET['p_id']) ? $_GET['p_id'] : '';
+
+    	$sql="select d_id,name from `pro_detail` where p_id=".$id;
+    	$data=Db::query($sql);
+    	$this->assign('list',$data);
+		$this->assign('p_id',$_GET['p_id']);
+    	return $this->fetch();
+    }
+
+	//添加产品详情页面
+	public function addProdetail(){
+
+		return $this->fetch();
+	}
+
+	/*将产品的详细信息插入到数据库中*/
+	public function insertProdetail(){
+
+print_r($_POST);
+print_r($_FILES); exit();
+			$detail = new ProDetail();
+			$detail->name = $_POST['pro_name'];
+			$detail->price = $_POST['pro_price'];
+			$detail->special = $_POST['pro_special'];
+			$detail->salepoint = $_POST['pro_salepoint'];
+			$detail->name = $_POST['pro_name'];
+			$detail->p_id = $_POST['pid'];
+			$detail->addtime = time();
+			$detail->save();
+			/*插入图片没有写*/
+			//print_r($_POST);
+
+			if ($detail->d_id) {
+
+				// print_r($_FILES['pic']);exit;
+				//上传图片存放位置
+				$dir = dirname(dirname(dirname(dirname(__FILE__))));
+				$uploadpic = $dir . "/public/static/uploads/product";
+				//原始路径
+				$tmp_name = array();
+				$tmp_name = $_FILES['pic']['tmp_name'];
+				//原始图片name
+				$name = array();
+				$name = $_FILES['pic']['name'];
+				$time = time();
+				mkdir($uploadpic . '/' . $detail->d_id . $time);
+				//上传到服务器制定文件夹下
+				$sql = '';
+				foreach ($name as $key => $value) {
+					move_uploaded_file($tmp_name[$key], $uploadpic . '/' . $detail->d_id . $time . '/' . $value);
+					$url = $detail->d_id . $time . '/' . $value;
+					$pic = new ProPicture();
+					$pic->d_id = $detail->d_id;
+					$pic->img_url = $url;
+					$pic->addtime = $time;
+					$pic->save();
+				}
+
+//			print_r($pic->id);
+				if ($pic->id) {
+					//echo "<script>localStorage.setItem('kh_id',".$kehu->uid.");location.href ='?s=index/protocol/fenqiDetail';</script>";
+					echo "<script>alert('产品信息保存成功');location.href ='?s=index/wordskill/childpro&p_id='+" . $_POST['pid'] . ";</script>";
+				} else {
+					echo "<script>alert('产品信息保存失败');history.back();</script>";
+				}
+				exit();
+			}
+		}
+
+
+}
+
